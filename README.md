@@ -1,6 +1,7 @@
 # one-favor-app
 react native (ios-android)
 
+:)
 
 git init
 
