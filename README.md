@@ -1,6 +1,17 @@
 # one-favor-app
 react native (ios-android)
 
+
+git init
+
+git remote add one-favor-app https://github.com/ecandela/one-favor-app.git
+
+git push -u one-favor-app master
+
+git pull one-favor-app master
+
+
+
 npm i
 
 react-native install react-native-fbsdk
