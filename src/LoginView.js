@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import {
   StyleSheet,
   View,
-  Text
+  Text,
+  Button
 } from 'react-native';
 
 import FBSDK, {
@@ -12,9 +13,59 @@ import FBSDK, {
 
 import { Actions } from 'react-native-router-flux'
 
+import * as firebase from "firebase";
+
+var config = {
+  apiKey: "AIzaSyD3UwKWxSHDtLlxgqwlHdU1xnF6oOTph3w",
+  authDomain: "one-favor.firebaseapp.com",
+  databaseURL: "https://one-favor.firebaseio.com",
+  projectId: "one-favor",
+  storageBucket: "one-favor.appspot.com",
+  messagingSenderId: "719089187093"
+};
+firebase.initializeApp(config);
+
+const { FacebookAuthProvider } = firebase.auth;
+const firebaseAuth = firebase.auth();
+
 export default class LoginView extends Component {
   
+  state = {
+    credential: null
+  }
+
+  componentWillMount() {
+    this.authenticateUser();
+  }
   
+  authenticateUser = () => {
+    AccessToken.getCurrentAccessToken().then((data) => {
+      const { accessToken } = data
+      const credential = FacebookAuthProvider.credential(accessToken)
+      firebaseAuth.signInWithCredential(credential).then((credentials) => {
+        this.setState({ credentials })
+      }, (error) => {
+        console.log("Sign in error", error)
+      })
+    })
+  }
+
+  render() {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.welcome}>Bienvenidos a 1Favor</Text>
+        <Text style={styles.welcome}>
+          {this.state.credentials && this.state.credentials.displayName}
+        </Text>
+        <Button onPress={this.handleButtonPress} title='Seguir' />
+        <LoginButton
+          readPermissions={['public_profile','email']}
+          onLoginFinished={this.handleLoginFinished}
+          onLogoutFinished={() => alert("logout.")}/>
+      </View>
+    );
+  }
+
     handleLoginFinished = (error, result) => {
         if (error) {
             console.error(error)
@@ -23,29 +74,14 @@ export default class LoginView extends Component {
           console.error(result)
         
         } else {
-          AccessToken.getCurrentAccessToken().then(()=>{
-
-                Actions.home()
-          }      
-
-          )
+          this.authenticateUser()
         }
       }
   
-  
-    render() {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>Bienvenidos a 1Favor</Text>
-        <LoginButton
-          readPermissions={['public_profile','email']}
-          onLoginFinished={this.handleLoginFinished
-           
-          }
-          onLogoutFinished={() => alert("logout.")}/>
-      </View>
-    );
-  }
+      handleButtonPress = () => {
+        Actions.home()
+      }
+
 }
 
 const styles = StyleSheet.create({
