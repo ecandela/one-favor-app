@@ -6,70 +6,112 @@
 
 import React, { Component } from 'react';
 import {
-  Platform,
   StyleSheet,
   Text,
   View,
   Image,
-  Button,
-  Alert
+  TouchableOpacity
 } from 'react-native';
 
-
 import Icon from 'react-native-vector-icons/Ionicons'
-
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' +
-    'Cmd+D or shake for dev menu',
-  android: 'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
-});
-
+import { firebaseAuth, firebaseDatabase } from './firebase'
 
 export default class ArtistBox extends Component {
+  state = {
+    liked: false,
+    likeCount: 0
+  }
 
+  handlePress = () => {
+    this.toggleLike()
+  }
+
+  getArtistRef = () => {
+    const { id } = this.props.artist
+    return firebaseDatabase.ref(`artist/${id}`)
+  }
+
+  componentWillMount() {
+    const { uid } = firebaseAuth.currentUser
+
+    this.getArtistRef().on('value', snapshot => {
+      const artist = snapshot.val()
+      if (artist) {
+        this.setState({
+          likeCount: artist.likeCount,
+          liked: artist.likes && artist.likes[uid]
+        })
+      }
+    })
+  }
+
+  toggleLike = () => {
+    const { uid } = firebaseAuth.currentUser
+    this.getArtistRef().transaction(function (artist) {
+      if (artist) {
+        if (artist.likes && artist.likes[uid]){
+          artist.likeCount--;
+          artist.likes[uid] = null;
+        } else {
+          artist.likeCount++;
+          if (!artist.likes) {
+            artist.likes = {};
+          }
+          artist.likes[uid] = true;
+        }
+      }
+      return artist || {
+        likeCount: 1,
+        likes: {
+          [uid]: true
+        }
+      }
+    })
+  }
 
   render() {
+    const { image, name, comments } = this.props.artist
+    const likeIcon = this.state.liked ?
+      <Icon name="ios-heart" size={30} color="#e74c3c" /> :
+      <Icon name="ios-heart-outline" size={30} color="gray" />
 
-    const {image,name,likes,comments}=this.props.artist 
+    const { likeCount } = this.state
 
     return (
-   
-        <View style={styles.artistBox}>
+      <View style={styles.artistBox}>
         <Image style={styles.image} source={{ uri: image }} />
-          <View style={styles.info}>
-            <Text style={styles.name}>{name}</Text>
-            <View style={styles.row}>
-              <View style={styles.iconContainer}>             
-                <Icon name="ios-heart-outline" size={30} color="gray" />
-                <Text style={styles.count}> {likes}</Text>
-              </View>  
-              <View style={styles.iconContainer}>
-                <Icon name="ios-chatboxes-outline" size={30} color="gray" />
-                <Text style={styles.count}> {comments}</Text>
-              </View>  
-            </View>  
-          </View>  
-        </View>  
-
-   
+        <View style={styles.info}>
+          <Text style={styles.name}>{name}</Text>
+          <View style={styles.row}>
+            <View style={styles.iconContainer}>
+              <TouchableOpacity onPress={this.handlePress}>
+                {likeIcon}
+              </TouchableOpacity>
+              <Text style={styles.count}>{likeCount}</Text>
+            </View>
+            <View style={styles.iconContainer}>
+              <Icon name="ios-chatboxes-outline" size={30} color="gray" />
+              <Text style={styles.count}>{comments}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
     );
   }
 }
 
 const styles = StyleSheet.create({
- 
   artistBox: {
-    margin:5,
+    margin: 5,
     backgroundColor: 'white',
     flexDirection: 'row',
-    shadowColor:'black',
-    shadowOpacity: .1,
+    shadowColor: 'black',
+    shadowOpacity: .2,
     shadowOffset: {
-      height:5,
-      width:-2
+      height: 1,
+      width: -2
     },
-    elevation:2
+    elevation: 2
   },
   image: {
     width: 150,

@@ -3,7 +3,9 @@ import {
   StyleSheet,
   View,
   Text,
-  Button
+  Button,
+  Image,
+  ImageBackground
 } from 'react-native';
 
 import FBSDK, {
@@ -13,20 +15,9 @@ import FBSDK, {
 
 import { Actions } from 'react-native-router-flux'
 
-import * as firebase from "firebase";
-
-var config = {
-  apiKey: "AIzaSyD3UwKWxSHDtLlxgqwlHdU1xnF6oOTph3w",
-  authDomain: "one-favor.firebaseapp.com",
-  databaseURL: "https://one-favor.firebaseio.com",
-  projectId: "one-favor",
-  storageBucket: "one-favor.appspot.com",
-  messagingSenderId: "719089187093"
-};
-firebase.initializeApp(config);
-
+import firebase, { firebaseAuth } from "./firebase";
 const { FacebookAuthProvider } = firebase.auth;
-const firebaseAuth = firebase.auth();
+
 
 export default class LoginView extends Component {
   
@@ -44,6 +35,7 @@ export default class LoginView extends Component {
       const credential = FacebookAuthProvider.credential(accessToken)
       firebaseAuth.signInWithCredential(credential).then((credentials) => {
         this.setState({ credentials })
+        Actions.home()
       }, (error) => {
         console.log("Sign in error", error)
       })
@@ -52,17 +44,14 @@ export default class LoginView extends Component {
 
   render() {
     return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>Bienvenidos a 1Favor</Text>
-        <Text style={styles.welcome}>
-          {this.state.credentials && this.state.credentials.displayName}
-        </Text>
-        <Button onPress={this.handleButtonPress} title='Seguir' />
+      <ImageBackground source={require('./background.jpg')} style={styles.container}>
+        <Text style={styles.welcome}>Bienvenidos a PlatziMusic</Text>
+        <Image source={require('./logo.png')} style={styles.logo} />
         <LoginButton
-          readPermissions={['public_profile','email']}
-          onLoginFinished={this.handleLoginFinished}
+          readPermissions={['public_profile', 'email']}
+          onLoginFinished={ this.handleLoginFinished }
           onLogoutFinished={() => alert("logout.")}/>
-      </View>
+    </ImageBackground>
     );
   }
 
@@ -76,24 +65,30 @@ export default class LoginView extends Component {
         } else {
           this.authenticateUser()
         }
-      }
-  
-      handleButtonPress = () => {
-        Actions.home()
-      }
+      } 
+    
 
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'lightgray', 
-    justifyContent:'center',
-    alignItems:'center',
-  }, 
-  welcome: {
-      fontSize:24,
-      fontWeight:'600',
-      marginBottom: 20 
+    width: null,
+    height: null,
+    backgroundColor: 'lightgray',
+    justifyContent: 'center',
+    alignItems: 'center'
   },
+  welcome: {
+    fontSize: 24,
+    fontWeight: '600',
+    marginBottom: 20,
+    backgroundColor: 'transparent',
+    color: 'white',
+  },
+  logo: {
+    width: 150,
+    height: 150,
+    marginBottom: 15
+  }
 });
